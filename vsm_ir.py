@@ -48,17 +48,17 @@ def saveToJSON():
         
 
 def calc_IDF_And_TFIDF_Values():
-    D = len( docs_dict.keys() )
-    # print(f"calc_IDF_And_TFIDF_Values()\t D: {D}\n") # TODO: debug
+    N = len( docs_dict.keys() )
+    # print(f"calc_IDF_And_TFIDF_Values()\t N: {N}\n") # TODO: debug
 
     for word in words_dict.keys():
         # print(f"word: {word}\n") # TODO: debug
 
         # Calculate IDF for each word
-        df = len( words_dict[ word ][ DOC_CONTAIN_WORD ] )
-        # print(f"df: {df}\n") # TODO: debug
+        NT = len( words_dict[ word ][ DOC_CONTAIN_WORD ] )
+        # print(f"NT: {NT}\n") # TODO: debug
 
-        idf = math.log2( D / df )
+        idf = math.log2( N / NT )
         # print(f"idf: {idf}\n") # TODO: debug
         words_dict[ word ][ IDF ] = idf
 
