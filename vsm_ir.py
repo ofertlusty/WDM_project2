@@ -25,8 +25,9 @@ EXTRACT            = "EXTRACT"
 
 # ----------------------------------------- GLOBALS ----------------------------------------
 
-# docs_dict - keyword: record_num, value: { MAX_FREQ, WORD_COUNT_IN_DOC, WORDS_IN_DOC = { keyword: WORD, value: TF-IDF } }
+# docs_dict - keyword: record_num, value: { VECTOR_LENGTH, MAX_FREQ, WORD_COUNT_IN_DOC, WORDS_IN_DOC = { keyword: WORD, value: TF-IDF } }
 docs_dict  = {} 
+VECTOR_LENGTH      = "vector_length"
 MAX_FREQ           = "max_freq"
 WORD_COUNT_IN_DOC  = "word_count_in_doc"
 WORDS_IN_DOC       = "words_in_doc"
@@ -44,8 +45,14 @@ TF                 = "tf"
 def saveToJSON(): 
     index = {"words_dict" : words_dict, "docs_dict" : docs_dict}
     with open(JSON_PATH, 'w') as file:
-        json.dump(index, file, indent=4)
-        
+        json.dump(index, file, indent=4)    
+
+
+def calcSqrtVectorLength():
+    for record_num in docs_dict.keys():
+        value = docs_dict[ record_num ][ VECTOR_LENGTH ]
+        docs_dict[ record_num ][ VECTOR_LENGTH ] = math.sqrt(value)
+
 
 def calc_IDF_And_TFIDF_Values():
     N = len( docs_dict.keys() )
@@ -66,8 +73,11 @@ def calc_IDF_And_TFIDF_Values():
         for record_num in docs_dict.keys():
             if record_num in words_dict[ word ][ DOC_CONTAIN_WORD ]:
                 tf = words_dict[ word ][ DOC_CONTAIN_WORD ][ record_num ][ TF ]
-                docs_dict[ record_num ][ WORDS_IN_DOC ][ word ] = tf * idf
+                tf_idf = tf * idf
+                docs_dict[ record_num ][ WORDS_IN_DOC ][ word ] = tf_idf
                 # print(f"tf-idf: {tf * idf}\n") # TODO: debug
+                docs_dict[ record_num ][ VECTOR_LENGTH ] = tf_idf * tf_idf
+
 
 
 # The function normalize the value of tf by the max_freq 
@@ -151,8 +161,8 @@ def parseFile( fullpath ):
         record_num = record.find( RECORDNUM ).text.strip().lstrip('0')
         # print(f"record_num: {record_num}\n") # TODO: debug
         
-        # Insert doc to docs_dict with empty sub-dict of words_in_dict and word_count and max_freq as zeros 
-        docs_dict[ record_num ] = { MAX_FREQ : 0, WORD_COUNT_IN_DOC : 0, WORDS_IN_DOC : {} } 
+        # Insert doc to docs_dict with empty sub-dict of words_in_dict and vector length, word_count and max_freq as zeros 
+        docs_dict[ record_num ] = { VECTOR_LENGTH : 0, MAX_FREQ : 0, WORD_COUNT_IN_DOC : 0, WORDS_IN_DOC : {} } 
 
         # Extract all words from doc include: title, topic, abstract and extract
         doc_words = extractWords( record )
@@ -191,8 +201,8 @@ def createIndex( dir_path ):
 
     # Calculating 
     calc_IDF_And_TFIDF_Values()
+    calcSqrtVectorLength()
     saveToJSON()
-
 
 
 # TODO: Tom's implementation
