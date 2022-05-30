@@ -48,6 +48,7 @@ porterStemmer = PorterStemmer()
 
 # ----------------------------------------- FUNCTIONS ----------------------------------------
 
+# Save docsDict and wordsDict into json file
 def saveToJSON(): 
     index = {"words_dict" : words_dict, "docs_dict" : docs_dict}
     with open(JSON_PATH, 'w') as file:
