@@ -24,7 +24,7 @@ EXTRACT            = "EXTRACT"
 # ----------------------------------------- GLOBALS ----------------------------------------
 
 # docs_dict - struct: 
-# keyword: record_num, value: { VECTOR_LENGTH, MAX_FREQ, WORD_COUNT_IN_DOC, WORDS_IN_DOC = { keyword: WORD, value: TF-IDF } }
+# keyword: record_num, value: { VECTOR_LENGTH, MAX_FREQ, WORD_COUNT_IN_DOC, WORDS_IN_DOC = { keyword: WORD, value: {"tf-idf" : TF-IDF } } }
 docs_dict  = {} 
 VECTOR_LENGTH      = "vector_length"
 MAX_FREQ           = "max_freq"
@@ -89,7 +89,6 @@ def calcTFValues( record_num ):
 def insertToWordsDict( word, record_num ):    
     # Check if word is found in words dict - if not, insert new entity with empty DOC_CONTAIN_WORD sub-dict and IDF as zero
     if ( word not in words_dict.keys() ):
-        # print(f"insertToWordsDict()\t word not in words_dict") # TODO: debug
         words_dict[ word ] = { IDF : 0, DOC_CONTAIN_WORD : {} }
 
     # Check if record_num is found in words_dict[ word ] - if not, insert new entity with COUNT_WORD_IN_DOC and TF as zeros
@@ -163,7 +162,7 @@ def parseFile( fullpath ):
                 continue
 
             # Insert word into words_dict and docs_dict
-            insertToDocsDict(cleanWord, record_num)
+            insertToDocsDict( cleanWord, record_num )
             insertToWordsDict( cleanWord, record_num )
 
             # Update WORD_COUNT_IN_DOC, find word's freq and update max_freq if needed
@@ -186,6 +185,8 @@ def createIndex( dir_path ):
     # Calculating 
     calc_IDF_And_TFIDF_Values()
     calcSqrtVectorLength()
+
+    # Save dictionaries to Json file
     saveToJSON()
 
 
