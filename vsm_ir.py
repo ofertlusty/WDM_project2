@@ -11,8 +11,10 @@ from nltk.stem import PorterStemmer
 
 # ---------------------------------------- CONSTANTS ----------------------------------------
 CREATE_INDEX       = "create_index"
-QUESTION_ARGV      = "question"
+QUESTION_ARGV      = "query"
 JSON_PATH          = "vsm_inverted_index.json"
+ANSWER_PATH        = "ranked_query_docs.txt"
+MAX_NUM_RESULTS    = 10 # TODO: need to find optimal value
 
 RECORD             = "RECORD"
 RECORDNUM          = "RECORDNUM"
@@ -76,7 +78,8 @@ def calc_IDF_And_TFIDF_Values():
                 tf = words_dict[ word ][ DOC_CONTAIN_WORD ][ record_num ][ TF ]
                 tf_idf = tf * idf
                 docs_dict[ record_num ][ WORDS_IN_DOC ][ word ][ TF_IDF ] = tf_idf
-                docs_dict[ record_num ][ VECTOR_LENGTH ] = tf_idf * tf_idf
+                docs_dict[ record_num ][ VECTOR_LENGTH ] += tf_idf * tf_idf
+    # TODO: the vector length probably needs += instead of = 
 
 
 # The function normalize the value of tf by the max_freq 
@@ -189,17 +192,59 @@ def createIndex( dir_path ):
     # Save dictionaries to Json file
     saveToJSON()
 
+    
+def output_result(results: list):
+    with open(ANSWER_PATH, 'w') as fp:
+        for doc in results:
+            fp.write("%s\n" % doc)
 
-# TODO: Tom's implementation
-def query():
+
+def tfidf_query(path: str, query: str):
     # TODO: must use the same stemming for query too! 
-    # use parseWord()? 
-    a = 0
+    # use parseWord()?
+    inverted_index = json.load(open(path))
+    q_words_dict = inverted_index['words_dict']     
+    q_docs_dict = inverted_index['docs_dict']       
+    clean_query = []                                # List containing all clean words in query
+    query_dict = {}                                 # Dictionary with clean words as keys and tf-idf at values
+    output_candidates = {}
+    query_words = query.strip().split()
+    for word in query_words:
+        clean_word = parseWord(word)
+        if clean_word is not None:
+            clean_query.append(clean_word)
+    for clean_word in clean_query:
+        if clean_word in q_words_dict.keys():
+            query_dict[clean_word] = query_dict.get(clean_word, 0) + 1
+    # TODO: check if term frequency in query must be normalized by max frequency since we only care about relative order
+    max_frequency = max(query_dict.values())
+    for term in query_dict:
+        # calculate and updated tf * idf
+        query_dict[term] = (query_dict[term] / max_frequency) * q_words_dict[term][IDF]
+        for doc in q_words_dict[term][DOC_CONTAIN_WORD]:
+            output_candidates[doc] = output_candidates.get(doc, 0.0) + query_dict[term] * q_docs_dict[doc][WORDS_IN_DOC][term][TF_IDF]
+    for candidate in output_candidates:
+        output_candidates[candidate] /= q_docs_dict[candidate][VECTOR_LENGTH]
+    # TODO: check if normalization by query length is really necessary since we only care about relative order
+
+    # TODO: need to clean the finish of this method
+    results = sorted(output_candidates.items(), key=lambda candidate: candidate[1], reverse=True)
+    clean_results = [result[0] for result in results]
+    output_result(clean_results[:MAX_NUM_RESULTS])
+    return
+
+
+def bm25_query(path: str, query: str):
+    # TODO: need to complete this
+    
+    #output_result(clean_results[:MAX_NUM_RESULTS])
 
 
 if __name__ == '__main__':
     if ( sys.argv[1] == f"{CREATE_INDEX}" ):
         createIndex( sys.argv[2] )
     elif ( sys.argv[1] == f"{QUESTION_ARGV}" ):
-        query()
-
+        if sys.argv[2] == 'tfidf':
+            tfidf_query(sys.argv[3], sys.argv[4])
+        elif sys.argv[2] == 'bm25':
+            bm25_query(sys.argv[3], sys.argv[4])
