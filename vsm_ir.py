@@ -1,6 +1,3 @@
-# create_index command: python3 .\vsm_ir.py "create_index" ".\cfc-xml_corrected\"
-# TODO: after all small details and questions are answered should check option of creating auxiliary functions for common functionality between tfidf and bm25.
-
 import sys
 import os
 import xml.etree.ElementTree as ET
@@ -16,11 +13,19 @@ CREATE_INDEX       = "create_index"
 QUESTION_ARGV      = "query"
 JSON_PATH          = "vsm_inverted_index.json"
 ANSWER_PATH        = "ranked_query_docs.txt"
+<<<<<<< HEAD
 MAX_NUM_RESULTS    = 50     # TODO: need to find optimal value
 TFIDF_THRESHOLD    = 0.08   # TODO: need to find optimal value
 BM25_THRESHOLD     = 8      # TODO: need to find optimal value
 K_PARAM            = 2.0    # TODO: need to find optimal value
 B_PARAM            = 0.7    # TODO: need to find optimal value
+=======
+MAX_NUM_RESULTS    = 50
+TFIDF_THRESHOLD    = 0.09
+BM25_THRESHOLD     = 7.5
+K_PARAM            = 2.0
+B_PARAM            = 0.7
+>>>>>>> a97160e6e18e4dde1b0c0475d49f6e393d93a030
 
 # Weights for attributes in Record
 TITLE_W            = 10
@@ -239,18 +244,15 @@ def tfidf_query(path: str, query: str):
     for clean_word in clean_query:
         if clean_word in q_words_dict.keys():
             query_dict[clean_word] = query_dict.get(clean_word, 0) + 1
-    # TODO: check if term frequency in query must be normalized by max frequency since in slide 76 in lecture notes it isn't
     max_frequency = max(query_dict.values())
     for term in query_dict:
-        # calculate and updated tf * idf
+        # calculate and update tf * idf
         query_dict[term] = (query_dict[term] / max_frequency) * q_words_dict[term][IDF]
         for doc in q_words_dict[term][DOC_CONTAIN_WORD]:
             output_candidates[doc] = output_candidates.get(doc, 0.0) + query_dict[term] * q_docs_dict[doc][WORDS_IN_DOC][term][TF_IDF]
         query_length += query_dict[term] ** 2
     for candidate in output_candidates:
         output_candidates[candidate] /= q_docs_dict[candidate][VECTOR_LENGTH] * sqrt(query_length)
-
-    # TODO: need to clean the finish of this method
     results = sorted(output_candidates.items(), key=lambda candidate: candidate[1], reverse=True)
     clean_results = [result[0] for result in results if result[1] > TFIDF_THRESHOLD]
     output_result(clean_results[:MAX_NUM_RESULTS])
@@ -258,9 +260,6 @@ def tfidf_query(path: str, query: str):
 
 
 def bm25_query(path: str, query: str):
-    # TODO: what happens when same word has several occurences in the query - posted question in forum.
-    # TODO: the follow-up question is how to normalize the inner product <query, doc>
-    # current implementataion ignores multiple occurrences
     inverted_index = json.load(open(path))
     q_words_dict = inverted_index['words_dict']     
     q_docs_dict = inverted_index['docs_dict']       
@@ -287,8 +286,7 @@ def bm25_query(path: str, query: str):
         for doc in q_words_dict[term][DOC_CONTAIN_WORD]:
             term_count = q_words_dict[term][DOC_CONTAIN_WORD][doc][COUNT_WORD_IN_DOC]
             bm25_weight = (term_count * (K_PARAM + 1)) / (term_count + K_PARAM * (1 - B_PARAM + B_PARAM * q_docs_dict[doc][WORD_COUNT_IN_DOC] / avgdl))
-
-            # If a word has several occurences in the query then multiply it's contribution to the BM25 score
+            # For each term - multiply it's contribution to the final score by the number of occurences in the query
             output_candidates[doc] = output_candidates.get(doc, 0.0) + idf * bm25_weight * query_dict[term]
     results = sorted(output_candidates.items(), key=lambda candidate: candidate[1], reverse=True)
     clean_results = [result[0] for result in results if result[1] > BM25_THRESHOLD]
@@ -296,18 +294,7 @@ def bm25_query(path: str, query: str):
     return
 
 
-def main(argv):
-    if ( argv[1] == f"{CREATE_INDEX}" ):
-        createIndex( argv[2] )
-    elif ( argv[1] == f"{QUESTION_ARGV}" ):
-        if argv[2] == 'tfidf':
-            tfidf_query(argv[3], argv[4])
-        elif argv[2] == 'bm25':
-            bm25_query(argv[3], argv[4])
-
 if __name__ == '__main__':
-    main(sys.argv)
-    """
     if ( sys.argv[1] == f"{CREATE_INDEX}" ):
         createIndex( sys.argv[2] )
     elif ( sys.argv[1] == f"{QUESTION_ARGV}" ):
@@ -315,4 +302,3 @@ if __name__ == '__main__':
             tfidf_query(sys.argv[3], sys.argv[4])
         elif sys.argv[2] == 'bm25':
             bm25_query(sys.argv[3], sys.argv[4])
-    """
