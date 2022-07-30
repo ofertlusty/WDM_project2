@@ -123,6 +123,7 @@ if __name__ == '__main__':
     avg_f_tf_idf /= count
     print('AVERAGE:')
     print(f'Params: MAX_NUM_RESULTS={vsm_ir.MAX_NUM_RESULTS}, TF thresh={vsm_ir.TFIDF_THRESHOLD}, BM thresh={vsm_ir.BM25_THRESHOLD}, k={vsm_ir.K_PARAM}, b={vsm_ir.B_PARAM}')
+    print(f'Weights: TITLE_W={vsm_ir.TITLE_W}, ABSTRACT_W={vsm_ir.ABSTRACT_W}, EXTRACT_W={vsm_ir.EXTRACT_W}, MAJORSUBJ_W={vsm_ir.MAJORSUBJ_W}, MINORSUBJ_W={vsm_ir.MINORSUBJ_W}')
     print(f'TF-IDF Scores:\nNDCG@10: {avg_ndcg10_tf_idf},\t\tPrecision: {avg_precision_tf_idf},\t\tRecall: {avg_recall_tf_idf},\t\tF: {avg_f_tf_idf}')
 
     avg_ndcg10_bm25 /= count
