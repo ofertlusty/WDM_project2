@@ -278,7 +278,18 @@ def bm25_query(path: str, query: str):
     return
 
 
+def main(argv):
+    if ( argv[1] == f"{CREATE_INDEX}" ):
+        createIndex( argv[2] )
+    elif ( argv[1] == f"{QUESTION_ARGV}" ):
+        if argv[2] == 'tfidf':
+            tfidf_query(argv[3], argv[4])
+        elif argv[2] == 'bm25':
+            bm25_query(argv[3], argv[4])
+
 if __name__ == '__main__':
+    main(sys.argv)
+    """
     if ( sys.argv[1] == f"{CREATE_INDEX}" ):
         createIndex( sys.argv[2] )
     elif ( sys.argv[1] == f"{QUESTION_ARGV}" ):
@@ -286,3 +297,4 @@ if __name__ == '__main__':
             tfidf_query(sys.argv[3], sys.argv[4])
         elif sys.argv[2] == 'bm25':
             bm25_query(sys.argv[3], sys.argv[4])
+    """
