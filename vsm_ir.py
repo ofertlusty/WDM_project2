@@ -16,11 +16,11 @@ CREATE_INDEX       = "create_index"
 QUESTION_ARGV      = "query"
 JSON_PATH          = "vsm_inverted_index.json"
 ANSWER_PATH        = "ranked_query_docs.txt"
-MAX_NUM_RESULTS    = 10     # TODO: need to find optimal value
+MAX_NUM_RESULTS    = 15     # TODO: need to find optimal value
 TFIDF_THRESHOLD    = 0.0    # TODO: need to find optimal value
 BM25_THRESHOLD     = 0.0    # TODO: need to find optimal value
-K_PARAM            = 1.2    # TODO: need to find optimal value
-B_PARAM            = 0.75   # TODO: need to find optimal value
+K_PARAM            = 1.5    # TODO: need to find optimal value
+B_PARAM            = 0.7   # TODO: need to find optimal value
 
 RECORD             = "RECORD"
 RECORDNUM          = "RECORDNUM"
