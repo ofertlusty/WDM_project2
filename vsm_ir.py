@@ -16,24 +16,22 @@ CREATE_INDEX       = "create_index"
 QUESTION_ARGV      = "query"
 JSON_PATH          = "vsm_inverted_index.json"
 ANSWER_PATH        = "ranked_query_docs.txt"
-MAX_NUM_RESULTS    = 15     # TODO: need to find optimal value
-TFIDF_THRESHOLD    = 0.0    # TODO: need to find optimal value
-BM25_THRESHOLD     = 0.0    # TODO: need to find optimal value
-K_PARAM            = 1.5    # TODO: need to find optimal value
-B_PARAM            = 0.7   # TODO: need to find optimal value
+MAX_NUM_RESULTS    = 50     # TODO: need to find optimal value
+TFIDF_THRESHOLD    = 0.09   # TODO: need to find optimal value
+BM25_THRESHOLD     = 7.5    # TODO: need to find optimal value
+K_PARAM            = 2.0    # TODO: need to find optimal value
+B_PARAM            = 0.7    # TODO: need to find optimal value
 
-
-TITLE_W            = 4
-TOPIC_W            = 4
+# Weights for attributes in Record
+TITLE_W            = 10
 ABSTRACT_W         = 1
 EXTRACT_W          = 1
-MAJORSUBJ_W        = 4
-MINORSUBJ_W        = 2
+MAJORSUBJ_W        = 5
+MINORSUBJ_W        = 5
 
 RECORD             = "RECORD"
 RECORDNUM          = "RECORDNUM"
 TITLE              = "TITLE"
-TOPIC              = "TOPIC"
 ABSTRACT           = "ABSTRACT"
 EXTRACT            = "EXTRACT"
 MAJORSUBJ          = "MAJORSUBJ"
@@ -95,8 +93,6 @@ def calc_IDF_And_TFIDF_Values():
                 tf_idf = tf * idf
                 docs_dict[ record_num ][ WORDS_IN_DOC ][ word ][ TF_IDF ] = tf_idf
                 docs_dict[ record_num ][ VECTOR_LENGTH ] += tf_idf * tf_idf
-    # TODO: the vector length probably needs += instead of = 
-
 
 # The function normalize the value of tf by the max_freq 
 def calcTFValues( record_num ):
@@ -138,13 +134,7 @@ def extractWords( record ):
     title_words = record.find( TITLE )
     if ( title_words != None and title_words.text != None ):
         for i in range( TITLE_W ):
-            doc_words += title_words.text.strip().split()
-
-    # Add topic's words to dox_words 
-    topic_words = record.find( TOPIC )
-    if ( topic_words != None and topic_words.text != None ):
-        for i in range( TOPIC_W ):
-            doc_words += topic_words.text.strip().split()
+            doc_words += title_words.text.strip().split()        
 
     # Add abstract's words to dox_words 
     abstract_words = record.find( ABSTRACT )
@@ -160,16 +150,18 @@ def extractWords( record ):
 
     # Add major subject's words to dox_words 
     majorSubj_words = record.find( MAJORSUBJ )
-    if ( majorSubj_words != None and majorSubj_words.text != None ):
-        for i in range( MAJORSUBJ_W ):
-            doc_words += majorSubj_words.text.strip().split()
-    
+    if ( majorSubj_words != None ): 
+        for topic in majorSubj_words:
+            for i in range( MAJORSUBJ_W ):
+                doc_words += ("-".join( topic.text.strip().split() )).split("-")
+
     # Add minor subject's words to dox_words 
     minorSubj_words = record.find( MINORSUBJ )
-    if ( minorSubj_words != None and minorSubj_words.text != None ):
-        for i in range( MINORSUBJ_W ):
-            doc_words += minorSubj_words.text.strip().split()
-
+    if ( minorSubj_words != None ): 
+        for topic in minorSubj_words:
+            for i in range( MINORSUBJ_W ):
+                doc_words += ("-".join( topic.text.strip().split() )).split("-")
+    
     return doc_words
 
 # The function parses the input file, extracting the record num and the text contains in it. 
@@ -182,7 +174,6 @@ def parseFile( fullpath ):
     records = root.findall( RECORD )
     for record in records:
         record_num = record.find( RECORDNUM ).text.strip().lstrip('0')
-        print(f"record_num: {record_num}")
         
         # Insert doc to docs_dict with empty sub-dict of words_in_dict and vector length, word_count and max_freq as zeros 
         docs_dict[ record_num ] = { VECTOR_LENGTH : 0, MAX_FREQ : 0, WORD_COUNT_IN_DOC : 0, WORDS_IN_DOC : {} } 
@@ -213,13 +204,10 @@ def parseFile( fullpath ):
 # The function open every ".xml" file and parses into the inverted index (saved as a ".json" file).
 def createIndex( dir_path ):
     files = os.listdir( dir_path )
-    i = 1
     for file in files:
         if ( file.endswith(".xml") ):
             fullpath = dir_path + file
             parseFile( fullpath )
-            print(f"i = {i}")
-            i += 1
 
     # Calculating 
     calc_IDF_And_TFIDF_Values()
@@ -236,8 +224,6 @@ def output_result(results: list):
 
 
 def tfidf_query(path: str, query: str):
-    # TODO: must use the same stemming for query too! 
-    # use parseWord()?
     inverted_index = json.load(open(path))
     q_words_dict = inverted_index['words_dict']     
     q_docs_dict = inverted_index['docs_dict']       
@@ -301,7 +287,9 @@ def bm25_query(path: str, query: str):
         for doc in q_words_dict[term][DOC_CONTAIN_WORD]:
             term_count = q_words_dict[term][DOC_CONTAIN_WORD][doc][COUNT_WORD_IN_DOC]
             bm25_weight = (term_count * (K_PARAM + 1)) / (term_count + K_PARAM * (1 - B_PARAM + B_PARAM * q_docs_dict[doc][WORD_COUNT_IN_DOC] / avgdl))
-            output_candidates[doc] = output_candidates.get(doc, 0.0) + idf * bm25_weight
+
+            # If a word has several occurences in the query then multiply it's contribution to the BM25 score
+            output_candidates[doc] = output_candidates.get(doc, 0.0) + idf * bm25_weight * query_dict[term]
     results = sorted(output_candidates.items(), key=lambda candidate: candidate[1], reverse=True)
     clean_results = [result[0] for result in results if result[1] > BM25_THRESHOLD]
     output_result(clean_results[:MAX_NUM_RESULTS])
