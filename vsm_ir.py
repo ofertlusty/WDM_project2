@@ -22,12 +22,22 @@ BM25_THRESHOLD     = 0.0    # TODO: need to find optimal value
 K_PARAM            = 1.5    # TODO: need to find optimal value
 B_PARAM            = 0.7   # TODO: need to find optimal value
 
+
+TITLE_W            = 4
+TOPIC_W            = 4
+ABSTRACT_W         = 1
+EXTRACT_W          = 1
+MAJORSUBJ_W        = 4
+MINORSUBJ_W        = 2
+
 RECORD             = "RECORD"
 RECORDNUM          = "RECORDNUM"
 TITLE              = "TITLE"
 TOPIC              = "TOPIC"
 ABSTRACT           = "ABSTRACT"
 EXTRACT            = "EXTRACT"
+MAJORSUBJ          = "MAJORSUBJ"
+MINORSUBJ          = "MINORSUBJ"
 
 # ----------------------------------------- GLOBALS ----------------------------------------
 
@@ -126,23 +136,39 @@ def extractWords( record ):
 
     # Add title's words to dox_words 
     title_words = record.find( TITLE )
-    if title_words != None:
-        doc_words += title_words.text.strip().split()
+    if ( title_words != None and title_words.text != None ):
+        for i in range( TITLE_W ):
+            doc_words += title_words.text.strip().split()
 
     # Add topic's words to dox_words 
     topic_words = record.find( TOPIC )
-    if topic_words != None:
-        doc_words += topic_words.text.strip().split()
+    if ( topic_words != None and topic_words.text != None ):
+        for i in range( TOPIC_W ):
+            doc_words += topic_words.text.strip().split()
 
     # Add abstract's words to dox_words 
     abstract_words = record.find( ABSTRACT )
-    if abstract_words != None:
-        doc_words += abstract_words.text.strip().split()
+    if ( abstract_words != None and abstract_words.text != None ):
+        for i in range( ABSTRACT_W ):
+            doc_words += abstract_words.text.strip().split()
 
     # Add extract's words to dox_words 
     extract_words = record.find( EXTRACT )
-    if extract_words != None:
-        doc_words += extract_words.text.strip().split()
+    if ( extract_words != None and extract_words.text != None ):
+        for i in range( EXTRACT_W ):
+            doc_words += extract_words.text.strip().split()
+
+    # Add major subject's words to dox_words 
+    majorSubj_words = record.find( MAJORSUBJ )
+    if ( majorSubj_words != None and majorSubj_words.text != None ):
+        for i in range( MAJORSUBJ_W ):
+            doc_words += majorSubj_words.text.strip().split()
+    
+    # Add minor subject's words to dox_words 
+    minorSubj_words = record.find( MINORSUBJ )
+    if ( minorSubj_words != None and minorSubj_words.text != None ):
+        for i in range( MINORSUBJ_W ):
+            doc_words += minorSubj_words.text.strip().split()
 
     return doc_words
 
@@ -156,6 +182,7 @@ def parseFile( fullpath ):
     records = root.findall( RECORD )
     for record in records:
         record_num = record.find( RECORDNUM ).text.strip().lstrip('0')
+        print(f"record_num: {record_num}")
         
         # Insert doc to docs_dict with empty sub-dict of words_in_dict and vector length, word_count and max_freq as zeros 
         docs_dict[ record_num ] = { VECTOR_LENGTH : 0, MAX_FREQ : 0, WORD_COUNT_IN_DOC : 0, WORDS_IN_DOC : {} } 
@@ -186,10 +213,13 @@ def parseFile( fullpath ):
 # The function open every ".xml" file and parses into the inverted index (saved as a ".json" file).
 def createIndex( dir_path ):
     files = os.listdir( dir_path )
+    i = 1
     for file in files:
         if ( file.endswith(".xml") ):
             fullpath = dir_path + file
             parseFile( fullpath )
+            print(f"i = {i}")
+            i += 1
 
     # Calculating 
     calc_IDF_And_TFIDF_Values()
