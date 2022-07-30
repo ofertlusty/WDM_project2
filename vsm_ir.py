@@ -13,11 +13,19 @@ CREATE_INDEX       = "create_index"
 QUESTION_ARGV      = "query"
 JSON_PATH          = "vsm_inverted_index.json"
 ANSWER_PATH        = "ranked_query_docs.txt"
+<<<<<<< HEAD
+MAX_NUM_RESULTS    = 50     # TODO: need to find optimal value
+TFIDF_THRESHOLD    = 0.08   # TODO: need to find optimal value
+BM25_THRESHOLD     = 8      # TODO: need to find optimal value
+K_PARAM            = 2.0    # TODO: need to find optimal value
+B_PARAM            = 0.7    # TODO: need to find optimal value
+=======
 MAX_NUM_RESULTS    = 50
 TFIDF_THRESHOLD    = 0.09
 BM25_THRESHOLD     = 7.5
 K_PARAM            = 2.0
 B_PARAM            = 0.7
+>>>>>>> a97160e6e18e4dde1b0c0475d49f6e393d93a030
 
 # Weights for attributes in Record
 TITLE_W            = 10
